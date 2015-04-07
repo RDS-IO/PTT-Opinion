@@ -1,16 +1,40 @@
-console.log("hello world");
-
 var lala = require('./fetch.js');
-
-lala.fetchArticleList("/bbs/Gossiping/index.html", "2", function(result){
-    console.log(result);
-});
+var fs = require('fs');
 
 
-/*  Test Fetch Article
+var curr = new Date();
+var today = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate());
+console.log(today.getTime());
 
-lala.fetchArticle("/bbs/sex/M.1420551984.A.3D0.html", function(result){
-    console.log(result);
-});
-*/
+var allArticleList = [];
+
+function artileListHandler(result, currUrl, currPage){
+	var rsObj = JSON.parse(result);
+    var lastArticleDate = curr.getFullYear() + "/" + rsObj[rsObj.length -1].date;
+    if(Date.parse(lastArticleDate) >= today.getTime()){ // keep fetching
+    	currPage++;
+		lala.fetchArticleList(currUrl, currPage, artileListHandler);	
+	}else{
+		for(var i in allArticleList){
+			proccessEnd(i);
+		}
+	}
+	allArticleList = allArticleList.concat(rsObj);
+}
+
+lala.fetchArticleList("/bbs/Gossiping/index.html", 1, artileListHandler);
+
+function proccessEnd(idx){
+	lala.fetchArticle(allArticleList[idx].link, function(r){
+		var obj = JSON.parse(r);
+		if(obj.rawData != null){
+			var text = obj.rawData.trim();
+			var line = allArticleList[idx].link + "\n" +allArticleList[idx].title + "\n" 
+					+ allArticleList[idx].author + "\n " + allArticleList[idx].date +", " + text + "\n";
+			fs.appendFile('output/' + idx, line, 'utf8', function(err){
+				if(err) throw err;
+			});
+		}
+	});
+}
 

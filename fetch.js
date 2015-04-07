@@ -50,15 +50,16 @@ module.exports = {
 		doms(".r-list-container > .r-ent").each(function(idx, e){
 			var tmpObj = {};
 			tmpObj.link = doms(e).children('.title').children().attr('href');
-			tmpObj.title = doms(e).children('.title').text();
+			tmpObj.title = doms(e).children('.title').text().trim();
 			tmpObj.nrec = doms(e).children('.nrec').text();
-			tmpObj.date = doms(e).children('.meta').children('.date').text();
-			tmpObj.author = doms(e).children('.meta').children('.author').text();
+			tmpObj.date = doms(e).children('.meta').children('.date').text().trim();
+			tmpObj.author = doms(e).children('.meta').children('.author').text().trim();
 			result.push(tmpObj);
 		});
 		return result.reverse();
 	},
 	fetchArticleList : function(url, page, callback){
+		console.log(">>> in fetching : url= " + url + ", page = " + page);
 		try{
 			var options = { 
 			    hostname : 'www.ptt.cc',
@@ -95,12 +96,23 @@ module.exports = {
 			  					rawHTML += chunk;
 			  				});
 			  				res.on('end', function(){
-			  					callback(JSON.stringify(me.rawHtmlToData(rawHTML)));
+			  					callback(JSON.stringify(me.rawHtmlToData(rawHTML)), url, page);
 			  				})
 			  			});
 			  			shttpReq.end();
 			  		}else{
-			  			callback(JSON.stringify(me.rawHtmlToData(rawHTML)));
+			  			var result = me.rawHtmlToData(rawHTML);
+			  			if(page == 1){// strip board rule
+			  				var idxOfRule = 0;
+			  				for(var i in result){
+			  					if(result[i].title.indexOf('版規') != -1){
+			  						idxOfRule = i;
+			  					}
+			  				}
+			  				callback(JSON.stringify(result.slice(parseInt(idxOfRule) +1)), url, page);
+			  			}else{
+			  				callback(JSON.stringify(result), url, page);
+			  			}
 			  		}
 			  	})
 			});
@@ -128,7 +140,7 @@ module.exports = {
 			  	outsideRes.on('end', function(){
 			  		var result = [];
 			  		var doms = cheerio.load(rawHTML);
-			  		var warp = {"rawData" : doms("#main-container").html()};
+			  		var warp = {"rawData" : doms("#main-container").text()};
 			  		callback(JSON.stringify(warp));
 			  	})
 			});
