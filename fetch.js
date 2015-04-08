@@ -90,13 +90,13 @@ module.exports = {
 			  			console.log("need number : " + neededPageCount);
 			  			var neededLink = link.replace(pttPageCount, neededPageCount);
 			  			options.path = neededLink;
-			  			rawHTML = "";
+			  			var innerRawHTML = "";
 			  			var shttpReq = https.request(options, function(res){
 			  				res.on('data', function(chunk){
-			  					rawHTML += chunk;
+			  					innerRawHTML += chunk;
 			  				});
 			  				res.on('end', function(){
-			  					callback(JSON.stringify(me.rawHtmlToData(rawHTML)), url, page);
+			  					callback(JSON.stringify(me.rawHtmlToData(innerRawHTML)), url, page);
 			  				})
 			  			});
 			  			shttpReq.end();
@@ -132,14 +132,14 @@ module.exports = {
 			    path : url,
 			    method : 'GET'
 			};
-			var rawHTML;
+			var oorawHTML;
 			var httpReq = https.request(options, function(outsideRes) {
 			  	outsideRes.on('data', function (chunk) {
-			  		rawHTML += chunk;
+			  		oorawHTML += chunk;
 			  	});
 			  	outsideRes.on('end', function(){
 			  		var result = [];
-			  		var doms = cheerio.load(rawHTML);
+			  		var doms = cheerio.load(oorawHTML);
 			  		var warp = {"rawData" : doms("#main-container").text()};
 			  		callback(JSON.stringify(warp));
 			  	})
